@@ -312,8 +312,7 @@ def _ls_android(path: str) -> None:
         :return:
     """
 
-    api = state_connection.get_api()
-    data = api.android_file_ls(path)
+    ls_files, readable, writable = _ls_android_api(path)
 
     def _timestamp_to_str(stamp: str) -> str:
         """
@@ -347,12 +346,29 @@ def _ls_android(path: str) -> None:
 
             file_name,
 
-        ] for file_name, file_data in data['files'].items()], headers=[
+        ] for file_name, file_data in ls_files], headers=[
             'Type', 'Last Modified', 'Read', 'Write', 'Hidden', 'Size', 'Name'
         ],
-    )) if data['readable'] else None
+    )) if readable else None
 
-    click.secho('\nReadable: {0}  Writable: {1}'.format(data['readable'], data['writable']), bold=True)
+    click.secho('\nReadable: {0}  Writable: {1}'.format(readable, writable), bold=True)
+
+
+def _ls_android_api(path: str):
+    """
+        Lists the contents of the specific path, as well as if it is
+        read-/writable.
+
+        This method is externalizing code from _ls_android for use in
+        the folder download command.
+
+        :param path:
+        :return:
+    """
+    api = state_connection.get_api()
+    data = api.android_file_ls(path)
+
+    return data['files'].items(), data['readable'], data['writable']
 
 
 def download(args: list) -> None:
